@@ -1,44 +1,79 @@
-// Fetch call to json-server
-async function getMessage() {
-    const messageRes = await fetch('http://localhost:3000/Hello')
-    const messageData = await messageRes.json()
-    const message = messageData.message;
-
-    // Create a new element to append message to
-    const messageEl = document.createElement('div')
-    messageEl.innerHTML = message;
-    
-    // Append the message element to the DOM
-    sliderContainer.appendChild(messageEl);
+const poke_container = document.getElementById('poke-container')
+const pokemon_count = 150
+const colors = {
+    fire: '#FDDFDF',
+    grass: '#DEFDE0',
+	electric: '#FCF7DE',
+	water: '#DEF3FD',
+	ground: '#f4e7da',
+	rock: '#d5d5d4',
+	fairy: '#fceaff',
+	poison: '#98d7a5',
+	bug: '#f8d5a3',
+	dragon: '#97b3e6',
+	psychic: '#eaeda1',
+	flying: '#F5F5F5',
+	fighting: '#E6E0D4',
+	normal: '#F5F5F5'
 }
-const sliderContainer = document.querySelector('.slider-container')
-const slideRight = document.querySelector('.right-slide')
-const slideLeft = document.querySelector('.left-slide')
-const upButton = document.querySelector('.up-button')
-const downButton = document.querySelector('.down-button')
-const slidesLength = slideRight.querySelectorAll('div').length
 
-let activeSlideIndex = 0
+const main_types = Object.keys(colors)
 
-slideLeft.style.top = `-${(slidesLength - 1) * 100}vh`
-
-upButton.addEventListener('click', () => changeSlide('up'))
-downButton.addEventListener('click', () => changeSlide('down'))
-
-const changeSlide = (direction) => {
-    const sliderHeight = sliderContainer.clientHeight
-    if(direction === 'up') {
-        activeSlideIndex++
-        if(activeSlideIndex > slidesLength - 1) {
-            activeSlideIndex = 0
-        }
-    } else if(direction === 'down') {
-        activeSlideIndex--
-        if(activeSlideIndex < 0) {
-            activeSlideIndex = slidesLength - 1
-        }
+const fetchPokemons = async () => {
+    for(let i = 1; i <= pokemon_count; i++) {
+        await getPokemon(i)
     }
-
-    slideRight.style.transform = `translateY(-${activeSlideIndex * sliderHeight}px)`
-    slideLeft.style.transform = `translateY(${activeSlideIndex * sliderHeight}px)`
 }
+
+const getPokemon = async (id) => {
+    const url = `https://pokeapi.co/api/v2/pokemon/${id}`
+    const res = await fetch(url)
+    const data = await res.json()
+    createPokemonCard(data)
+}
+
+const createPokemonCard = (pokemon) => {
+    const pokemonEl = document.createElement('div')
+    pokemonEl.classList.add('pokemon')
+
+    const name = pokemon.name[0].toUpperCase() + pokemon.name.slice(1)
+    const id = pokemon.id.toString().padStart(3, '0')
+
+    const poke_types = pokemon.types.map(type => type.type.name)
+    const type = main_types.find(type => poke_types.indexOf(type) > -1)
+    const color = colors[type]
+
+    pokemonEl.style.backgroundColor = color
+
+    const pokemonInnerHTML = `
+    <div class="img-container">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png"" alt="${name}">
+    </div>
+    <div class="info">
+        <span class="number">#${id}</span>
+        <h3 class="name">${name}</h3>
+        <small class="type">Type: <span>${type}</span> </small>
+    </div>
+    `
+
+    pokemonEl.innerHTML = pokemonInnerHTML
+
+    poke_container.appendChild(pokemonEl)
+}
+
+fetchPokemons()
+
+const searchButton = document.querySelector(".search-button");
+searchButton.addEventListener("click", function() {
+  const searchValue = document.querySelector(".search-bar").value.toLowerCase();
+  const pokemonCards = document.querySelectorAll(".pokemon");
+ 
+  for (let i = 0; i < pokemonCards.length; i++) {
+    const name = pokemonCards[i].querySelector(".name").textContent.toLowerCase();
+    if (name.indexOf(searchValue) !== -1) {
+        pokemonCards[i].style.display = "block";
+    } else {
+        pokemonCards[i].style.display = "none";
+    }
+  }
+});
